@@ -1,14 +1,29 @@
-# app/modules/marketplace/routes.py 
+# app/modules/marketplace/routes.py
+import json
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from app.extensions import db
 from app.models.client import Client
 from app.models.organization import Organization
+from app.models.product import Product
+from app.models.plan import Plan
 
 marketplace_bp = Blueprint("marketplace", __name__)
 
 
+def _safe_json(text: str | None):
+    if not text:
+        return None
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return text
+
+
+# -----------------------
+# Organizations (protected)
+# -----------------------
 @marketplace_bp.get("/organizations")
 @jwt_required()
 def list_organizations():
@@ -74,3 +89,49 @@ def create_organization():
             },
         }
     ), 201
+
+
+# -----------------------
+# Products + Plans (public)
+# -----------------------
+@marketplace_bp.get("/products")
+def list_products():
+    products = Product.query.filter_by(is_active=True).order_by(Product.created_at.desc()).all()
+    return jsonify(
+        {
+            "products": [
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "slug": p.slug,
+                    "description": p.description,
+                }
+                for p in products
+            ]
+        }
+    ), 200
+
+
+@marketplace_bp.get("/products/<string:slug>/plans")
+def list_plans(slug: str):
+    product = Product.query.filter_by(slug=slug, is_active=True).first()
+    if not product:
+        return jsonify({"error": "Product not found"}), 404
+
+    plans = Plan.query.filter_by(product_id=product.id, is_active=True).order_by(Plan.price.asc()).all()
+
+    return jsonify(
+        {
+            "product": {"id": product.id, "name": product.name, "slug": product.slug},
+            "plans": [
+                {
+                    "id": pl.id,
+                    "name": pl.name,
+                    "price": pl.price,
+                    "duration_days": pl.duration_days,
+                    "features": _safe_json(pl.features),
+                }
+                for pl in plans
+            ],
+        }
+    ), 200

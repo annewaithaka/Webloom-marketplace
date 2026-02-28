@@ -1,0 +1,15 @@
+:root{
+  --wb-green: #16a34a;     /* primary */
+  --wb-black: #0b0f0e;     /* near-black */
+  --wb-white: #ffffff;
+
+  --wb-bg: #ffffff;
+  --wb-text: #0b0f0e;
+  --wb-muted: #5b6260;
+
+  --wb-border: #e6e8e7;
+  --wb-card: #ffffff;
+
+  --wb-radius: 14px;
+  --wb-shadow: 0 10px 25px rgba(0,0,0,0.06);
+}
