@@ -1,119 +1,70 @@
-# 🚀 Webloom Tech Kenya Marketplace
+# Webloom Tech Kenya Marketplace (MVP)
 
-Webloom Marketplace is a scalable multi-organization SaaS platform built for Webloom Tech Kenya.  
-It allows management of users, clients, and their organizations — forming the foundation for a full marketplace ecosystem.
-
-Repository:
-git@github.com:annewaithaka/Webloom-marketplace.git
+A centralized marketplace for Webloom products (starting with **Azani Smart Duka**) that supports:
+- One-time client registration + login
+- Multiple organizations (branches) per client
+- Organization-level subscriptions (coming next)
+- Future-ready structure for payments, notifications, and provisioning
 
 ---
 
-# 🏗 Project Structure
+## Tech Stack
 
+- **Frontend:** React JS
+- **Backend:** Flask (Python)
+- **DB (now):** SQLite
+- **DB (later):** PostgreSQL
+
+---
+
+## Repo Structure
 Webloom-marketplace/
-│
-├── backend/        # FastAPI backend (Python + UV)
-├── frontend/       # React frontend (Vite)
-└── README.md
+webloom-marketplace-frontend/
+webloom-marketplace-backend/
 
----
 
-# ⚙️ Tech Stack
+## Backend Setup (Flask + SQLite)
 
-## Backend
-- Python 3.11+
-- FastAPI
-- SQLAlchemy
-- Alembic
-- PostgreSQL (planned)
-- UV (Python package manager)
-
-## Frontend
-- React (JavaScript)
-- Vite
-- Axios
-
----
-
-# 🖥 Local Setup Guide
-
----
-
-# 1️⃣ Clone the Repository
-
+### 1) Go to backend folder
 ```bash
-git clone git@github.com:annewaithaka/Webloom-marketplace.git
-cd Webloom-marketplace
+cd webloom-marketplace-backend
 
-2️⃣ Backend Setup
-Navigate to backend
-cd backend
-
-Install UV (if not installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-
-Restart your terminal if necessary.
-
-Create Virtual Environment
-uv venv
+2) Create and activate virtual environment
+python -m venv .venv
 source .venv/bin/activate
 
-Install Dependencies
-uv add fastapi
-uv add uvicorn
-uv add sqlalchemy
-uv add psycopg2-binary
-uv add alembic
-uv add python-dotenv
-uv add pydantic-settings
+3) Install dependencies
+pip install -r requirements.txt
 
-Run Backend
-uvicorn app.main:app --reload
+4) Create .env
 
+Create a file named .env in webloom-marketplace-backend/:
+FLASK_ENV=development
+SECRET_KEY=change-me
+JWT_SECRET_KEY=change-me-too
+DATABASE_URL=sqlite:///webloom.db
 
-Backend will run at:
+5) Run migrations
+export FLASK_APP="run:app"
+flask db migrate -m "init"
+flask db upgrade
 
-http://127.0.0.1:8000
+If you already have a migrations folder, you do not need flask db init.
 
+6) Start the backend server
+python run.py
 
-Swagger docs:
+Backend will run on:
 
-http://127.0.0.1:8000/docs
+http://127.0.0.1:5000
 
-3️⃣ Frontend Setup
-Navigate to frontend
-cd ../frontend
+### Frontend Setup (React)
 
-Install Dependencies
+1) Go to frontend folder
+cd ../webloom-marketplace-frontend
+
+2) Install dependencies
 npm install
 
-Run Frontend
+3) Start frontend
 npm run dev
-
-
-Frontend runs at:
-
-http://localhost:5173
-
-🧠 Architecture Principles
-
-Backend follows modular clean architecture:
-
-Models → Database structure only
-
-Schemas → Validation (request/response)
-
-Services → Business logic
-
-Routers → HTTP endpoints only
-
-Frontend mirrors backend modules:
-
-Users
-
-Clients
-
-Organizations
-
-Each module contains its own service and page logic.
