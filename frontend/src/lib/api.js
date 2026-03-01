@@ -2,6 +2,18 @@
 const DEFAULT_BASE = "http://127.0.0.1:5000";
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE;
 
+export function getToken() {
+  return localStorage.getItem("webloom_token");
+}
+
+export function setToken(token) {
+  localStorage.setItem("webloom_token", token);
+}
+
+export function clearToken() {
+  localStorage.removeItem("webloom_token");
+}
+
 async function request(path, options = {}) {
   const url = `${API_BASE_URL}${path}`;
   const res = await fetch(url, {
@@ -34,6 +46,12 @@ function unwrapList(body, key) {
   return [];
 }
 
+function authHeaders() {
+  const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+/** Public */
 export async function getProducts() {
   const body = await request("/products");
   return unwrapList(body, "products");
@@ -42,4 +60,38 @@ export async function getProducts() {
 export async function getPlans(slug) {
   const body = await request(`/products/${encodeURIComponent(slug)}/plans`);
   return unwrapList(body, "plans");
+}
+
+/** Auth */
+export async function register(payload) {
+  // payload: {business_name, owner_name, email, phone, password}
+  return request("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function login(payload) {
+  // payload: {email, password}
+  return request("/auth/login", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/** Organizations (protected) */
+export async function getOrganizations() {
+  const body = await request("/organizations", {
+    headers: { ...authHeaders() },
+  });
+  return unwrapList(body, "organizations");
+}
+
+export async function createOrganization(payload) {
+  // payload: {organization_name, organization_owner}
+  return request("/organizations", {
+    method: "POST",
+    headers: { ...authHeaders() },
+    body: JSON.stringify(payload),
+  });
 }
