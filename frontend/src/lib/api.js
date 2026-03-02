@@ -118,3 +118,4 @@ export async function createOrganization(payload) {
     body: JSON.stringify(payload),
   });
 }
+
