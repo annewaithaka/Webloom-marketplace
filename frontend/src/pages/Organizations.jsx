@@ -1,12 +1,14 @@
 // frontend/src/pages/Organizations.jsx
 import React, { useEffect, useState } from "react";
-import { createOrganization, getOrganizations } from "../lib/api.js";
+import { useNavigate } from "react-router-dom";
+import { createOrganization, getOrganizations, setFlash } from "../lib/api.js";
 
 function normalize(value) {
   return String(value ?? "").trim();
 }
 
 export default function Organizations() {
+  const navigate = useNavigate();
   const [list, setList] = useState({ status: "loading", items: [], error: null });
   const [form, setForm] = useState({ organization_name: "", organization_owner: "" });
   const [createState, setCreateState] = useState({ status: "idle", error: null });
@@ -17,6 +19,11 @@ export default function Organizations() {
       const items = await getOrganizations();
       setList({ status: "success", items, error: null });
     } catch (error) {
+      if (error?.status === 403) {
+        setFlash("Setup payment required. Organizations are locked until your account is activated.");
+        navigate("/setup-payment", { replace: true });
+        return;
+      }
       setList({ status: "error", items: [], error });
     }
   }
@@ -46,6 +53,11 @@ export default function Organizations() {
       setForm({ organization_name: "", organization_owner: "" });
       await load();
     } catch (error) {
+      if (error?.status === 403) {
+        setFlash("Setup payment required. You cannot create an organization yet.");
+        navigate("/setup-payment", { replace: true });
+        return;
+      }
       setCreateState({ status: "error", error });
     }
   }
@@ -100,7 +112,11 @@ export default function Organizations() {
               />
             </label>
 
-            <button className="btn btn--full" type="submit" disabled={!canSubmit || createState.status === "loading"}>
+            <button
+              className="btn btn--full"
+              type="submit"
+              disabled={!canSubmit || createState.status === "loading"}
+            >
               {createState.status === "loading" ? "Creating…" : "Create organization"}
             </button>
           </form>
@@ -109,7 +125,12 @@ export default function Organizations() {
         <div className="card card--span-7">
           <div className="row">
             <h2 className="h2">Your organizations</h2>
-            <button className="btn btn--ghost" type="button" onClick={load} disabled={list.status === "loading"}>
+            <button
+              className="btn btn--ghost"
+              type="button"
+              onClick={load}
+              disabled={list.status === "loading"}
+            >
               Refresh
             </button>
           </div>

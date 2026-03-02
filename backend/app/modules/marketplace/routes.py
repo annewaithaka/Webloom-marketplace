@@ -8,6 +8,7 @@ from app.models.client import Client
 from app.models.organization import Organization
 from app.models.product import Product
 from app.models.plan import Plan
+from app.utils.access_control import require_active_client
 
 marketplace_bp = Blueprint("marketplace", __name__)
 
@@ -54,10 +55,11 @@ def list_organizations():
 
 @marketplace_bp.post("/organizations")
 @jwt_required()
+@require_active_client
 def create_organization():
     user_id = int(get_jwt_identity())
     client = Client.query.filter_by(owner_user_id=user_id).first()
-
+    # client existence already checked in decorator, but keep this for safety/clarity:
     if not client:
         return jsonify({"error": "Client account not found for this user"}), 404
 
@@ -118,7 +120,11 @@ def list_plans(slug: str):
     if not product:
         return jsonify({"error": "Product not found"}), 404
 
-    plans = Plan.query.filter_by(product_id=product.id, is_active=True).order_by(Plan.price.asc()).all()
+    plans = (
+        Plan.query.filter_by(product_id=product.id, is_active=True)
+        .order_by(Plan.monthly_fee_kes.asc(), Plan.price.asc())
+        .all()
+    )
 
     return jsonify(
         {
@@ -128,6 +134,8 @@ def list_plans(slug: str):
                     "id": pl.id,
                     "name": pl.name,
                     "price": pl.price,
+                    "monthly_fee_kes": pl.monthly_fee_kes,
+                    "setup_fee_kes": pl.setup_fee_kes,
                     "duration_days": pl.duration_days,
                     "features": _safe_json(pl.features),
                 }
@@ -135,3 +143,4 @@ def list_plans(slug: str):
             ],
         }
     ), 200
+    

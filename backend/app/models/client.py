@@ -1,6 +1,5 @@
-# app/models/client.py 
+# app/models/client.py
 from datetime import datetime
-
 from app.extensions import db
 
 
@@ -12,6 +11,14 @@ class Client(db.Model):
 
     business_name = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(20), nullable=False, default="active")  # active/inactive
+
+    # NEW: onboarding gate
+    account_status = db.Column(
+        db.String(32),
+        nullable=False,
+        default="PENDING_SETUP_PAYMENT",  # PENDING_SETUP_PAYMENT / ACTIVE / SUSPENDED
+        index=True,
+    )
 
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)

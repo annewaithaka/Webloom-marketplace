@@ -1,6 +1,6 @@
-# app/auth/routes.py 
+# app/auth/routes.py
 from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 from app.extensions import db
 from app.models.user import User
@@ -16,6 +16,36 @@ VERIFY_TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24  # 24 hours
 def _verification_link(token: str) -> str:
     base = request.host_url.rstrip("/")
     return f"{base}/auth/verify-email?token={token}"
+
+
+@auth_bp.get("/me")
+@jwt_required()
+def me():
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    client = Client.query.filter_by(owner_user_id=user_id).first()
+
+    return jsonify(
+        {
+            "user": {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "phone": user.phone,
+                "role": user.role,
+                "email_verified": user.email_verified,
+            },
+            "client": {
+                "id": client.id if client else None,
+                "business_name": client.business_name if client else None,
+                "status": client.status if client else None,
+                "account_status": client.account_status if client else None,
+            },
+        }
+    ), 200
 
 
 @auth_bp.post("/register")
@@ -44,7 +74,13 @@ def register():
     db.session.add(user)
     db.session.flush()
 
-    client = Client(owner_user_id=user.id, business_name=business_name, status="active")
+    client = Client(
+        owner_user_id=user.id,
+        business_name=business_name,
+        status="active",
+        # Optional if you add model default; explicit is fine:
+        account_status="PENDING_SETUP_PAYMENT",
+    )
     db.session.add(client)
     db.session.commit()
 
@@ -135,4 +171,3 @@ def login():
             },
         }
     ), 200
-    

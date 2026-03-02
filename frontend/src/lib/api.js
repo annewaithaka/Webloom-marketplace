@@ -1,17 +1,37 @@
-// frontend/src/lib/api.js
+// =========================================
+// FILE: frontend/src/lib/api.js
+// =========================================
 const DEFAULT_BASE = "http://127.0.0.1:5000";
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE;
 
+const TOKEN_KEY = "webloom_token";
+const FLASH_KEY = "webloom_flash";
+
 export function getToken() {
-  return localStorage.getItem("webloom_token");
+  return localStorage.getItem(TOKEN_KEY);
 }
 
 export function setToken(token) {
-  localStorage.setItem("webloom_token", token);
+  localStorage.setItem(TOKEN_KEY, token);
 }
 
 export function clearToken() {
-  localStorage.removeItem("webloom_token");
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+export function setFlash(message) {
+  sessionStorage.setItem(FLASH_KEY, message);
+}
+
+export function popFlash() {
+  const msg = sessionStorage.getItem(FLASH_KEY);
+  if (msg) sessionStorage.removeItem(FLASH_KEY);
+  return msg;
+}
+
+function authHeaders() {
+  const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 async function request(path, options = {}) {
@@ -29,9 +49,12 @@ async function request(path, options = {}) {
   const body = isJson ? await res.json().catch(() => null) : await res.text().catch(() => "");
 
   if (!res.ok) {
-    const err = new Error(
-      typeof body === "object" && body?.message ? body.message : `Request failed (${res.status})`
-    );
+    const apiMsg =
+      (body && typeof body === "object" && (body.error || body.message)) ||
+      (typeof body === "string" && body.trim()) ||
+      "";
+
+    const err = new Error(apiMsg || `Request failed (${res.status})`);
     err.status = res.status;
     err.body = body;
     throw err;
@@ -46,11 +69,6 @@ function unwrapList(body, key) {
   return [];
 }
 
-function authHeaders() {
-  const token = getToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 /** Public */
 export async function getProducts() {
   const body = await request("/products");
@@ -59,12 +77,11 @@ export async function getProducts() {
 
 export async function getPlans(slug) {
   const body = await request(`/products/${encodeURIComponent(slug)}/plans`);
-  return unwrapList(body, "plans");
+  return body; // keep full {product, plans}
 }
 
 /** Auth */
 export async function register(payload) {
-  // payload: {business_name, owner_name, email, phone, password}
   return request("/auth/register", {
     method: "POST",
     body: JSON.stringify(payload),
@@ -72,11 +89,18 @@ export async function register(payload) {
 }
 
 export async function login(payload) {
-  // payload: {email, password}
-  return request("/auth/login", {
+  const body = await request("/auth/login", {
     method: "POST",
     body: JSON.stringify(payload),
   });
+
+  const token = body?.access_token;
+  if (token) setToken(token);
+  return body;
+}
+
+export async function getMe() {
+  return request("/auth/me", { headers: { ...authHeaders() } });
 }
 
 /** Organizations (protected) */
@@ -88,7 +112,6 @@ export async function getOrganizations() {
 }
 
 export async function createOrganization(payload) {
-  // payload: {organization_name, organization_owner}
   return request("/organizations", {
     method: "POST",
     headers: { ...authHeaders() },

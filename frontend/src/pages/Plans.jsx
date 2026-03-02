@@ -1,61 +1,113 @@
-import React, { useEffect, useState } from "react";
+// frontend/src/pages/Plans.jsx
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getPlans } from "../lib/api.js";
+import { getPlansBySlug } from "../api/marketplace";
+import { formatKES } from "../utils/formatMoney";
 
 export default function Plans() {
   const { slug } = useParams();
-  const [state, setState] = useState({ status: "loading", plans: [], error: null });
+  const [loading, setLoading] = useState(true);
+  const [product, setProduct] = useState(null);
+  const [plans, setPlans] = useState([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    let alive = true;
-    getPlans(slug)
-      .then((plans) => {
-        if (!alive) return;
-        setState({ status: "success", plans: Array.isArray(plans) ? plans : [], error: null });
-      })
-      .catch((error) => {
-        if (!alive) return;
-        setState({ status: "error", plans: [], error });
-      });
-    return () => { alive = false; };
+    let mounted = true;
+
+    (async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const data = await getPlansBySlug(slug);
+        if (!mounted) return;
+
+        setProduct(data.product);
+        setPlans(data.plans || []);
+      } catch (e) {
+        if (!mounted) return;
+        setError(e?.response?.data?.error || "Could not load plans.");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, [slug]);
 
   return (
-    <section>
-      <div className="row">
+    <div className="container">
+      <div className="row" style={{ marginTop: 0 }}>
         <div>
-          <h1 className="h1">Plans</h1>
-          <p className="sub">Product: <span className="code">{slug}</span></p>
+          <div className="badge">Plans</div>
+          <h1 className="h1">{product?.name || slug}</h1>
+          <p className="p">Pick a plan.</p>
         </div>
-        <Link className="btn btn--ghost" to="/">← Back</Link>
+        <Link className="btn" to="/">
+          Back
+        </Link>
       </div>
 
-      {state.status === "loading" && <p className="muted">Loading plans…</p>}
+      {loading ? (
+        <p className="p" style={{ marginTop: 16 }}>
+          Loading…
+        </p>
+      ) : error ? (
+        <p className="p" style={{ marginTop: 16 }}>
+          {error}
+        </p>
+      ) : (
+        <div className="grid" style={{ marginTop: 16 }}>
+          {plans.map((pl) => {
+            const monthly = Number(pl.monthly_fee_kes ?? pl.price ?? 0);
+            const setup = Number(pl.setup_fee_kes ?? 0);
 
-      {state.status === "error" && (
-        <div className="card">
-          <h2 className="h2">Couldn’t load plans</h2>
-          <p className="muted">{state.error?.message || "Unknown error"}</p>
+            return (
+              <div className="card" key={pl.id}>
+                <div className="row" style={{ marginTop: 0 }}>
+                  <h2 className="h2" style={{ margin: 0 }}>
+                    {pl.name}
+                  </h2>
+                  <span className="badge">{formatKES(monthly)}/month</span>
+                </div>
+
+                {setup > 0 ? (
+                  <p className="p" style={{ marginTop: 6 }}>
+                    + {formatKES(setup)} setup (one-time)
+                  </p>
+                ) : null}
+
+                <p className="p">Duration: {pl.duration_days} days</p>
+
+                {pl.features ? (
+                  <pre
+                    style={{
+                      marginTop: 12,
+                      padding: 12,
+                      borderRadius: 12,
+                      border: "1px solid var(--wb-border)",
+                      background: "#f8faf9",
+                      overflowX: "auto",
+                      fontSize: 12,
+                    }}
+                  >
+                    {JSON.stringify(pl.features, null, 2)}
+                  </pre>
+                ) : null}
+
+                <div className="row">
+                  <Link className="btn btn-primary" to={`/subscribe/${slug}/${pl.id}`}>
+                    Choose plan
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+
+          {plans.length === 0 ? <p className="p">No plans yet.</p> : null}
         </div>
       )}
-
-      {state.status === "success" && (
-        state.plans.length ? (
-          <div className="grid">
-            {state.plans.map((pl) => (
-              <article key={pl.slug || pl.id || pl.name} className="card">
-                <div className="card__top">
-                  <h2 className="h2">{pl.name || pl.slug}</h2>
-                  <span className="pill">{pl.tier || "Plan"}</span>
-                </div>
-                <p className="muted">{pl.description || "No description provided."}</p>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p className="muted">No plans found for this product.</p>
-        )
-      )}
-    </section>
+    </div>
   );
 }

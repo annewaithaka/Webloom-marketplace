@@ -1,4 +1,6 @@
-// frontend/src/App.jsx
+// =========================================
+// FILE: frontend/src/App.jsx
+// =========================================
 import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppShell from "./routes/AppShell.jsx";
@@ -6,8 +8,10 @@ import RequireAuth from "./routes/RequireAuth.jsx";
 
 import Marketplace from "./pages/Marketplace.jsx";
 import Plans from "./pages/Plans.jsx";
+import Subscribe from "./pages/Subscribe.jsx";
 import Register from "./pages/Register.jsx";
 import Login from "./pages/Login.jsx";
+import SetupPayment from "./pages/SetupPayment.jsx";
 import Organizations from "./pages/Organizations.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
@@ -18,8 +22,12 @@ export default function App() {
         <Route path="/" element={<Marketplace />} />
         <Route path="/products/:slug/plans" element={<Plans />} />
 
+        {/* NEW: subscribe stub route */}
+        <Route path="/subscribe/:productSlug/:planId" element={<Subscribe />} />
+
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/setup-payment" element={<SetupPayment />} />
 
         <Route
           path="/organizations"
