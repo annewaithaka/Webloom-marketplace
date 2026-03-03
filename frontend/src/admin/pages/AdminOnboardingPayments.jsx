@@ -86,7 +86,7 @@ export default function AdminOnboardingPayments() {
     setBusy(true);
     setError("");
     try {
-      await adminConfirmOnboardingPayment(id, { auto_activate: false });
+      await adminConfirmOnboardingPayment(id, { auto_activate: true });
       await load();
     } catch (e) {
       setError(e?.message || "Confirm failed");

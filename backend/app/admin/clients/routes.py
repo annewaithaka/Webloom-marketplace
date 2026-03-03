@@ -7,6 +7,8 @@ from app.extensions import db
 from app.models.client import Client
 from app.models.user import User
 from app.admin.access_control import require_roles
+from app.utils.audit import log_admin_action
+from flask_jwt_extended import get_jwt_identity
 
 admin_clients_bp = Blueprint("admin_clients", __name__, url_prefix="/clients")
 

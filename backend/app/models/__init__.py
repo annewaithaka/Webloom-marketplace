@@ -8,3 +8,4 @@ from app.models.product import Product  # noqa: F401
 from app.models.plan import Plan  # noqa: F401
 from app.models.admin_user import AdminUser  # noqa: F401
 from app.models.onboarding_payment import OnboardingPayment  # noqa: F401
+from app.models.audit_log import AuditLog  # noqa: F401

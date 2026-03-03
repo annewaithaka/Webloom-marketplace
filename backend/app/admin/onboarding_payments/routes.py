@@ -12,6 +12,7 @@ from app.models.client import Client
 from app.models.onboarding_payment import OnboardingPayment
 from app.models.user import User
 from flask_jwt_extended import get_jwt_identity
+from app.utils.audit import log_admin_action
 
 admin_onboarding_payments_bp = Blueprint(
     "admin_onboarding_payments",
@@ -88,6 +89,18 @@ def create_payment():
         created_by_admin_id=admin_id,
     )
     db.session.add(payment)
+    db.session.flush()
+
+    log_admin_action(
+        actor_admin_id=admin_id,
+        action="PAYMENT_RECORDED",
+        entity_type="OnboardingPayment",
+        entity_id=str(payment.id),
+        before=None,
+        after={"status": payment.status, "client_id": payment.client_id, "amount_kes": payment.amount_kes, "reference": payment.reference},
+        request=request,
+    )
+
     db.session.commit()
 
     return jsonify({"message": "Payment recorded", "payment_id": payment.id}), 201
@@ -164,7 +177,7 @@ def confirm_payment(payment_id: int):
     Body: { auto_activate?: bool }
     """
     data = request.get_json(silent=True) or {}
-    auto_activate = bool(data.get("auto_activate", False))
+    auto_activate = bool(data.get("auto_activate", True))
 
     payment = OnboardingPayment.query.get(payment_id)
     if not payment:
@@ -177,6 +190,8 @@ def confirm_payment(payment_id: int):
 
     admin_id = int(get_jwt_identity())
 
+    before = {"status": payment.status}
+
     payment.status = "CONFIRMED"
     payment.confirmed_by_admin_id = admin_id
     payment.confirmed_at = datetime.utcnow()
@@ -187,6 +202,16 @@ def confirm_payment(payment_id: int):
     if client and auto_activate:
         client.account_status = "ACTIVE"
         client.updated_at = datetime.utcnow()
+
+    log_admin_action(
+        actor_admin_id=admin_id,
+        action="PAYMENT_CONFIRMED",
+        entity_type="OnboardingPayment",
+        entity_id=str(payment.id),
+        before=before,
+        after={"status": payment.status, "auto_activated": auto_activate},
+        request=request,
+    )
 
     db.session.commit()
 
@@ -214,6 +239,8 @@ def reject_payment(payment_id: int):
 
     admin_id = int(get_jwt_identity())
 
+    before = {"status": payment.status}
+
     payment.status = "REJECTED"
     payment.rejected_by_admin_id = admin_id
     payment.rejected_at = datetime.utcnow()
@@ -223,6 +250,16 @@ def reject_payment(payment_id: int):
     if reason:
         existing = (payment.notes or "").strip()
         payment.notes = existing + ("\\n" if existing else "") + f"REJECT_REASON: {reason}"
+
+    log_admin_action(
+        actor_admin_id=admin_id,
+        action="PAYMENT_REJECTED",
+        entity_type="OnboardingPayment",
+        entity_id=str(payment.id),
+        before=before,
+        after={"status": payment.status},
+        request=request,
+    )
 
     db.session.commit()
 
