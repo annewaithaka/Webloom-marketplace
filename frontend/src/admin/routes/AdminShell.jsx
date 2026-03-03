@@ -48,7 +48,7 @@ export default function AdminShell() {
           <div style={{ display: "grid", gap: 8 }}>
             <Link to="/admin">Home</Link>
             <Link to="/admin/clients">Clients</Link>
-            <span style={{ opacity: 0.6 }}>Payments (next)</span>
+            <Link to="/admin/payments/onboarding">Payments</Link>
             <span style={{ opacity: 0.6 }}>Catalog (next)</span>
             <span style={{ opacity: 0.6 }}>Audit (next)</span>
           </div>

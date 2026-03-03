@@ -163,6 +163,60 @@ export async function adminSuspendClient(clientId) {
   });
 }
 
+/** Admin Onboarding Payments */
+export async function adminGetOnboardingPayments({ q = "", status = "", client_id = "", page = 1, page_size = 20 } = {}) {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (status) params.set("status", status);
+  if (client_id) params.set("client_id", String(client_id));
+  params.set("page", String(page));
+  params.set("page_size", String(page_size));
+  return request(`/admin/onboarding-payments?${params.toString()}`, { headers: { ...adminAuthHeaders() } });
+}
+
+export async function adminCreateOnboardingPayment(payload) {
+  return request("/admin/onboarding-payments", {
+    method: "POST",
+    headers: { ...adminAuthHeaders() },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function adminConfirmOnboardingPayment(paymentId, payload = {}) {
+  return request(`/admin/onboarding-payments/${paymentId}/confirm`, {
+    method: "POST",
+    headers: { ...adminAuthHeaders() },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function adminRejectOnboardingPayment(paymentId, payload = {}) {
+  return request(`/admin/onboarding-payments/${paymentId}/reject`, {
+    method: "POST",
+    headers: { ...adminAuthHeaders() },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function adminExportOnboardingPaymentsCsv({ q = "", status = "", client_id = "" } = {}) {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (status) params.set("status", status);
+  if (client_id) params.set("client_id", String(client_id));
+
+  const url = `${API_BASE_URL}/admin/onboarding-payments/export.csv?${params.toString()}`;
+  const res = await fetch(url, { headers: { ...adminAuthHeaders() } });
+  if (!res.ok) throw new Error(`Export failed (${res.status})`);
+
+  const blob = await res.blob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "onboarding_payments.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
 /** Organizations (protected) */
 export async function getOrganizations() {
   const body = await request("/organizations", { headers: { ...authHeaders() } });

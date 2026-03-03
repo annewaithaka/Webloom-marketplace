@@ -10,6 +10,7 @@ import AdminShell from "./admin/routes/AdminShell.jsx";
 import RequireAdminAuth from "./admin/routes/RequireAdminAuth.jsx";
 import AdminLogin from "./admin/pages/AdminLogin.jsx";
 import AdminHome from "./admin/pages/AdminHome.jsx";
+import AdminOnboardingPayments from "./admin/pages/AdminOnboardingPayments.jsx";
 import AdminClients from "./admin/pages/AdminClients.jsx";
 import AdminClientDetail from "./admin/pages/AdminClientDetail.jsx";
 
@@ -36,6 +37,7 @@ export default function App() {
         }
       >
         <Route index element={<AdminHome />} />
+        <Route path="payments/onboarding" element={<AdminOnboardingPayments />} />
         <Route path="clients" element={<AdminClients />} />
         <Route path="clients/:id" element={<AdminClientDetail />} />
       </Route>
