@@ -1,12 +1,11 @@
-// =========================================
-// FILE: frontend/src/lib/api.js
-// =========================================
 const DEFAULT_BASE = "http://127.0.0.1:5000";
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE;
 
 const TOKEN_KEY = "webloom_token";
+const ADMIN_TOKEN_KEY = "webloom_admin_token";
 const FLASH_KEY = "webloom_flash";
 
+/** Client token */
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
 }
@@ -19,6 +18,20 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+/** Admin token */
+export function getAdminToken() {
+  return localStorage.getItem(ADMIN_TOKEN_KEY);
+}
+
+export function setAdminToken(token) {
+  localStorage.setItem(ADMIN_TOKEN_KEY, token);
+}
+
+export function clearAdminToken() {
+  localStorage.removeItem(ADMIN_TOKEN_KEY);
+}
+
+/** Flash messages */
 export function setFlash(message) {
   sessionStorage.setItem(FLASH_KEY, message);
 }
@@ -31,6 +44,11 @@ export function popFlash() {
 
 function authHeaders() {
   const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function adminAuthHeaders() {
+  const token = getAdminToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -53,7 +71,6 @@ async function request(path, options = {}) {
       (body && typeof body === "object" && (body.error || body.message)) ||
       (typeof body === "string" && body.trim()) ||
       "";
-
     const err = new Error(apiMsg || `Request failed (${res.status})`);
     err.status = res.status;
     err.body = body;
@@ -76,11 +93,10 @@ export async function getProducts() {
 }
 
 export async function getPlans(slug) {
-  const body = await request(`/products/${encodeURIComponent(slug)}/plans`);
-  return body; // keep full {product, plans}
+  return request(`/products/${encodeURIComponent(slug)}/plans`);
 }
 
-/** Auth */
+/** Client Auth */
 export async function register(payload) {
   return request("/auth/register", {
     method: "POST",
@@ -103,11 +119,25 @@ export async function getMe() {
   return request("/auth/me", { headers: { ...authHeaders() } });
 }
 
+/** Admin Auth */
+export async function adminLogin(payload) {
+  const body = await request("/admin/auth/login", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+  const token = body?.access_token;
+  if (token) setAdminToken(token);
+  return body;
+}
+
+export async function adminMe() {
+  return request("/admin/auth/me", { headers: { ...adminAuthHeaders() } });
+}
+
 /** Organizations (protected) */
 export async function getOrganizations() {
-  const body = await request("/organizations", {
-    headers: { ...authHeaders() },
-  });
+  const body = await request("/organizations", { headers: { ...authHeaders() } });
   return unwrapList(body, "organizations");
 }
 
@@ -118,4 +148,3 @@ export async function createOrganization(payload) {
     body: JSON.stringify(payload),
   });
 }
-

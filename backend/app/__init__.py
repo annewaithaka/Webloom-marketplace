@@ -9,6 +9,9 @@ from app.logging import configure_logging
 from app.auth.routes import auth_bp
 from app.modules.marketplace.routes import marketplace_bp
 
+from app.admin.routes import admin_bp
+from app.admin.cli import register_admin_cli
+
 from app import models  # noqa: F401  (ensures models are imported for migrations)
 
 
@@ -24,6 +27,7 @@ def create_app() -> Flask:
     jwt.init_app(app)
 
     register_error_handlers(app)
+    register_admin_cli(app)
 
     @app.get("/health")
     def health():
@@ -31,5 +35,6 @@ def create_app() -> Flask:
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(marketplace_bp)
+    app.register_blueprint(admin_bp)
 
     return app
