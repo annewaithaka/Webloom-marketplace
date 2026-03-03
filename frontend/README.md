@@ -1,17 +1,6 @@
-annewaithaka@DESKTOP-854KJI4:~/personalprojects/Webloom-marketplace$ # From repo root (or run separately inside backend + frontend)
-# Produces a clean Markdown code block you can paste here.
-{
-  echo '```text'
-  if command -v tree >/dev/null 2>&1; then
-    tree -a -L 5 \
-      -I "node_modules|dist|build|__pycache__|.git|.venv|venv|instance|migrations|coverage" .
-  else
-    find . -maxdepth 5 \
-      \( -name node_modules -o -name dist -o -name build -o -name __pycache__ -o -name .git -o -name .venv -o -name venv -o -name instance -o -name migrations -o -name coverage \) -prune \
-} | tee TREE.md | sed 's|^\./||' | sort
-```text
 .
 ├── README.md
+├── TREE.md
 ├── backend
 │   ├── .env
 │   ├── .gitignore
@@ -43,16 +32,7 @@ annewaithaka@DESKTOP-854KJI4:~/personalprojects/Webloom-marketplace$ # From repo
 │   │   ├── modules
 │   │   │   ├── __init__.py
 │   │   │   ├── marketplace
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── controllers.py
-│   │   │   │   ├── routes.py
-│   │   │   │   ├── services.py
-│   │   │   │   └── validators.py
 │   │   │   └── payments
-│   │   │       ├── __init__.py
-│   │   │       ├── controllers.py
-│   │   │       ├── routes.py
-│   │   │       └── services.py
 │   │   ├── repositories
 │   │   ├── schemas
 │   │   ├── tasks
@@ -98,11 +78,12 @@ annewaithaka@DESKTOP-854KJI4:~/personalprojects/Webloom-marketplace$ # From repo
 │   │   ├── components
 │   │   │   ├── Button.jsx
 │   │   │   ├── Card.jsx
+│   │   │   ├── Field.jsx
 │   │   │   ├── Footer.jsx
 │   │   │   ├── Navbar.jsx
 │   │   │   ├── NotificationToast.jsx
+│   │   │   ├── PasswordField.jsx
 │   │   │   └── guards
-│   │   │       └── ProtectedRoute.jsx
 │   │   ├── config
 │   │   │   └── apiConfig.js
 │   │   ├── context
@@ -110,12 +91,7 @@ annewaithaka@DESKTOP-854KJI4:~/personalprojects/Webloom-marketplace$ # From repo
 │   │   │   └── SubscriptionContext.jsx
 │   │   ├── features
 │   │   │   ├── Marketplace
-│   │   │   │   ├── Marketplace.jsx
-│   │   │   │   ├── ProductCard.jsx
-│   │   │   │   └── ProductSetupForm.jsx
 │   │   │   └── Payments
-│   │   │       ├── Checkout.jsx
-│   │   │       └── PaymentConfirmation.jsx
 │   │   ├── forms
 │   │   ├── hooks
 │   │   │   └── useAuth.js
@@ -136,6 +112,7 @@ annewaithaka@DESKTOP-854KJI4:~/personalprojects/Webloom-marketplace$ # From repo
 │   │   │   ├── ProductPlans.jsx
 │   │   │   ├── Register.jsx
 │   │   │   ├── SetupPayment.jsx
+│   │   │   ├── Subscribe.jsx
 │   │   │   └── SubscriptionPage.jsx
 │   │   ├── routes
 │   │   │   ├── AppRoutes.jsx
@@ -150,6 +127,3 @@ annewaithaka@DESKTOP-854KJI4:~/personalprojects/Webloom-marketplace$ # From repo
 │   │       └── storage.js
 │   └── vite.config.js
 └── package.json
-
-40 directories, 99 files
-```
