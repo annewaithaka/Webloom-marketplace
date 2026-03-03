@@ -135,6 +135,34 @@ export async function adminMe() {
   return request("/admin/auth/me", { headers: { ...adminAuthHeaders() } });
 }
 
+/** Admin Clients */
+export async function adminGetClients({ q = "", account_status = "", page = 1, page_size = 20 } = {}) {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (account_status) params.set("account_status", account_status);
+  params.set("page", String(page));
+  params.set("page_size", String(page_size));
+  return request(`/admin/clients?${params.toString()}`, { headers: { ...adminAuthHeaders() } });
+}
+
+export async function adminGetClient(clientId) {
+  return request(`/admin/clients/${clientId}`, { headers: { ...adminAuthHeaders() } });
+}
+
+export async function adminActivateClient(clientId) {
+  return request(`/admin/clients/${clientId}/activate`, {
+    method: "POST",
+    headers: { ...adminAuthHeaders() },
+  });
+}
+
+export async function adminSuspendClient(clientId) {
+  return request(`/admin/clients/${clientId}/suspend`, {
+    method: "POST",
+    headers: { ...adminAuthHeaders() },
+  });
+}
+
 /** Organizations (protected) */
 export async function getOrganizations() {
   const body = await request("/organizations", { headers: { ...authHeaders() } });

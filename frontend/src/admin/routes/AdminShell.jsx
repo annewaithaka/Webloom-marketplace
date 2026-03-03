@@ -47,7 +47,7 @@ export default function AdminShell() {
           <div style={{ fontWeight: 700, marginBottom: 10 }}>Modules</div>
           <div style={{ display: "grid", gap: 8 }}>
             <Link to="/admin">Home</Link>
-            <span style={{ opacity: 0.6 }}>Clients (next)</span>
+            <Link to="/admin/clients">Clients</Link>
             <span style={{ opacity: 0.6 }}>Payments (next)</span>
             <span style={{ opacity: 0.6 }}>Catalog (next)</span>
             <span style={{ opacity: 0.6 }}>Audit (next)</span>
