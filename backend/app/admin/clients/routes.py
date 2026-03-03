@@ -117,8 +117,22 @@ def activate_client(client_id: int):
     if not client:
         return jsonify({"error": "Client not found"}), 404
 
+    admin_id = int(get_jwt_identity())
+    before = {"account_status": client.account_status}
+
     client.account_status = "ACTIVE"
     client.updated_at = datetime.utcnow()
+
+    log_admin_action(
+        actor_admin_id=admin_id,
+        action="CLIENT_ACTIVATED",
+        entity_type="Client",
+        entity_id=str(client.id),
+        before=before,
+        after={"account_status": client.account_status},
+        request=request,
+    )
+
     db.session.commit()
     return jsonify({"message": "Client activated", "account_status": client.account_status}), 200
 
@@ -130,7 +144,21 @@ def suspend_client(client_id: int):
     if not client:
         return jsonify({"error": "Client not found"}), 404
 
+    admin_id = int(get_jwt_identity())
+    before = {"account_status": client.account_status}
+
     client.account_status = "SUSPENDED"
     client.updated_at = datetime.utcnow()
+
+    log_admin_action(
+        actor_admin_id=admin_id,
+        action="CLIENT_SUSPENDED",
+        entity_type="Client",
+        entity_id=str(client.id),
+        before=before,
+        after={"account_status": client.account_status},
+        request=request,
+    )
+
     db.session.commit()
     return jsonify({"message": "Client suspended", "account_status": client.account_status}), 200
